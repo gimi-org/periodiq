@@ -190,3 +190,19 @@ def test_yearly():
     d = datetime(2019, 12, 10, 12, 24, 30)
     s = spec.next_valid_date(d)
     assert s == datetime(2020, 6, 15, 18, 30)
+
+
+def test_validate():
+    from periodiq import CronSpec
+
+    spec = CronSpec(
+        m=[30],
+        h=[18],
+        dom=[15],
+        month=list(range(1, 13)),
+        dow=[4],
+    )
+
+    assert spec.validate(datetime(2019, 1, 15, 18, 30))
+    assert not spec.validate(datetime(2019, 1, 16, 18, 30))
+    assert spec.validate(datetime(2019, 1, 17, 18, 30))

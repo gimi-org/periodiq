@@ -88,33 +88,6 @@ class CronSpec:
     def astuple(self):
         return self.minute, self.hour, self.dom, self.month, self.dow
 
-    def replace(self, m=None, h=None, dom=None, month=None, dow=None):
-        copy = deepcopy(self)
-        copy.setup(m, h, dom, month, dow)
-        return copy
-
-    def setup(self, m, h, dom, month, dow):
-        # For each field, we compute the next valid value out of bound. i.e if
-        # valids minutes are [25, 50], appending 75 will ensure there is always
-        # a next valid value for any minute between 0 and 59. timedelta will
-        # ensure out of bound minutes are translated to next hour.
-        if m is not None:
-            self.minute = m
-            self.minute_e = m + [60 + m[0]]
-        if h is not None:
-            self.hour = h
-            self.hour_e = h + [24 + h[0]]
-        if dom is not None:
-            self.is_dom_restricted = len(dom) < 31
-            self.dom = dom
-        if month is not None:
-            self.month = month
-            self.month_e = month + [12 + month[0]]
-        if dow is not None:
-            self.is_dow_restricted = len(dow) < 7
-            self.dow = dow
-            self.dow_e = dow + [7 + dow[0]]
-
     def next_valid_date(self, last):
         # Reset second and microsecond. It's irrelevant for scheduling.
         n = last.replace(second=0, microsecond=0)
@@ -159,6 +132,57 @@ class CronSpec:
         n += timedelta(days=delay_d)
 
         return n
+
+    def replace(self, m=None, h=None, dom=None, month=None, dow=None):
+        copy = deepcopy(self)
+        copy.setup(m, h, dom, month, dow)
+        return copy
+
+    def setup(self, m, h, dom, month, dow):
+        # For each field, we compute the next valid value out of bound. i.e if
+        # valids minutes are [25, 50], appending 75 will ensure there is always
+        # a next valid value for any minute between 0 and 59. timedelta will
+        # ensure out of bound minutes are translated to next hour.
+        if m is not None:
+            self.minute = m
+            self.minute_e = m + [60 + m[0]]
+        if h is not None:
+            self.hour = h
+            self.hour_e = h + [24 + h[0]]
+        if dom is not None:
+            self.is_dom_restricted = len(dom) < 31
+            self.dom = dom
+        if month is not None:
+            self.month = month
+            self.month_e = month + [12 + month[0]]
+        if dow is not None:
+            self.is_dow_restricted = len(dow) < 7
+            self.dow = dow
+            self.dow_e = dow + [7 + dow[0]]
+
+    def validate(self, date):
+        # Returns whether this date match the specified constraints.
+
+        if date.minute not in self.minute:
+            return False
+
+        if date.hour not in self.hour:
+            return False
+
+        if date.month not in self.month:
+            return False
+
+        weekday = date.isoweekday()
+        if self.is_dow_restricted and self.is_dom_restricted:
+            if not (date.day in self.dom or weekday in self.dow):
+                return False
+        else:
+            if date.day not in self.dom:
+                return False
+            if weekday not in self.dow:
+                return False
+
+        return True
 
 
 def main():
