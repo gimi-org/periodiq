@@ -1,0 +1,17 @@
+stages:
+- test
+
+
+test-unit:
+  stage: test
+  image: circleci/python:3.7-stretch
+  variables:
+    XDG_CACHE_HOME: .cache/
+  script:
+  - export PATH=~/.local/bin:$PATH
+  - pip --disable-pip-version-check install --user poetry
+  - poetry install
+  - poetry run flake8 example.py periodiq.py tests/
+  - poetry run pytest -x tests/unit/
+  cache:
+    paths: [.cache/]
