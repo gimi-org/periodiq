@@ -4,6 +4,7 @@ version = "0.0.0"
 description = "Simple Scheduler for Dramatiq Task Queue"
 authors = ["Étienne BERSAC"]
 license = "LGPL-3.0+"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.5"
