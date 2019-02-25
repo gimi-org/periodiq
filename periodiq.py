@@ -27,9 +27,66 @@ def monthesrange(start_year, start_month, end_month):
     )
 
 
+def expand_valid(value, min, max):
+    # From cron-like time or date field, expand all valid values within min-max
+    # interval.
+    valid = set()
+    value = value.replace('*', f'{min}-{max}')
+    intervals = value.split(',')
+    for interval in intervals:
+        range_, _, step = interval.partition('/')
+        step = 1 if '' == step else int(step)
+        start, _, end = range_.partition('-')
+        start = int(start)
+        end = start if '' == end else int(end)
+        # Note that step is not a modulo. cf.
+        # https://stackoverflow.com/questions/27412483/how-do-cron-steps-work
+        valid |= set(range(start, end + 1, step))
+    return sorted(valid)
+
+
 class CronSpec:
+    _named_spec = {
+        '@yearly': "0 0 1 1 *",
+        '@annually': "0 0 1 1 *",
+        '@monthly': "0 0 1 * *",
+        '@weekly': "0 0 * * 0",
+        '@daily': "0 0 * * *",
+        '@midnight': "0 0 * * *",
+        '@hourly': "0 * * * *",
+    }
+
+    @classmethod
+    def parse(cls, spec):
+        # Instanciate a CronSpec object from cron-like string.
+
+        fields = spec.strip()
+        if fields.startswith('@'):
+            fields = cls._named_spec[fields]
+        fields = fields.split()
+
+        # Replace day of week by their number.
+        dow = fields[4].lower()
+        weekdays = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
+        for i, day in enumerate(weekdays):
+            dow = dow.replace(day, f'{i}')
+
+        return cls(
+            m=expand_valid(fields[0], min=0, max=59),
+            h=expand_valid(fields[1], min=0, max=23),
+            dom=expand_valid(fields[2], min=1, max=31),
+            month=expand_valid(fields[3], min=1, max=12),
+            dow=expand_valid(dow, min=0, max=7),
+        )
+
     def __init__(self, m, h, dom, month, dow):
         self.setup(m, h, dom, month, dow)
+
+    def __eq__(self, other):
+        return self.astuple() == other.astuple()
+
+    def astuple(self):
+        return self.minute, self.hour, self.dom, self.month, self.dow
 
     def replace(self, m=None, h=None, dom=None, month=None, dow=None):
         copy = deepcopy(self)

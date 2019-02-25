@@ -1,6 +1,32 @@
 from datetime import datetime
 
 
+def test_parse():
+    from periodiq import cron
+
+    spec = cron('* * * * *')
+    assert list(range(0, 60)) == spec.minute
+    assert list(range(0, 24)) == spec.hour
+    assert list(range(1, 32)) == spec.dom
+    assert list(range(1, 13)) == spec.month
+    assert list(range(0, 8)) == spec.dow
+
+    spec = cron('1,5-10 10-20/2,1 1,2,3,5,8,13,21 */5 mon,thu')
+    assert [1, 5, 6, 7, 8, 9, 10] == spec.minute
+    assert [1, 10, 12, 14, 16, 18, 20] == spec.hour
+    assert [1, 2, 3, 5, 8, 13, 21] == spec.dom
+    assert [1, 6, 11] == spec.month
+    assert [1, 4] == spec.dow
+
+    assert cron("0 0 1 1 *") == cron('@yearly')
+    assert cron("0 0 1 1 *") == cron('@annually')
+    assert cron("0 0 1 * *") == cron('@monthly')
+    assert cron("0 0 * * 0") == cron('@weekly')
+    assert cron("0 0 * * *") == cron('@daily')
+    assert cron("0 0 * * *") == cron('@midnight')
+    assert cron("0 * * * *") == cron('@hourly')
+
+
 def test_minutely():
     # * * * * *
     from periodiq import CronSpec
