@@ -1,48 +1,36 @@
+import argparse
+import importlib
+import logging
+import pdb
+import sys
 from copy import deepcopy
 from calendar import monthrange
-from datetime import timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
+from pkg_resources import get_distribution
+from queue import SimpleQueue
+from signal import (
+    SIGALRM,
+    alarm,
+    signal,
+)
+from time import sleep
+
+from dramatiq import Middleware
+from dramatiq.cli import (
+    LOGFORMAT,
+    VERBOSITY,
+    import_broker,
+)
+
+
+logger = logging.getLogger('periodiq')
 
 
 def cron(spec):
     return CronSpec.parse(spec)
-
-
-def first(function, iterable):
-    # Return the first item from iterable accepted by function.
-    try:
-        return next(x for x in iterable if function(x))
-    except StopIteration:
-        raise ValueError("No matching value.")
-
-
-def monthesrange(start_year, start_month, end_month):
-    # Switch to zero-base month numbering.
-    start_month -= 1
-    end_month -= 1
-    return (
-        x for _, x in (
-            monthrange(start_year + m // 12, 1 + m % 12)
-            for m in range(start_month, end_month)
-        )
-    )
-
-
-def expand_valid(value, min, max):
-    # From cron-like time or date field, expand all valid values within min-max
-    # interval.
-    valid = set()
-    value = value.replace('*', f'{min}-{max}')
-    intervals = value.split(',')
-    for interval in intervals:
-        range_, _, step = interval.partition('/')
-        step = 1 if '' == step else int(step)
-        start, _, end = range_.partition('-')
-        start = int(start)
-        end = start if '' == end else int(end)
-        # Note that step is not a modulo. cf.
-        # https://stackoverflow.com/questions/27412483/how-do-cron-steps-work
-        valid |= set(range(start, end + 1, step))
-    return sorted(valid)
 
 
 class CronSpec:
@@ -185,12 +173,174 @@ class CronSpec:
         return True
 
 
+def entrypoint():
+    logging.basicConfig(level=logging.INFO, format=LOGFORMAT)
+
+    try:
+        exit(main())
+    except (pdb.bdb.BdbQuit, KeyboardInterrupt):
+        logger.info("Interrupted.")
+    except Exception:
+        logger.exception('Unhandled error:')
+        logger.error(
+            "Please file an issue at "
+            "https://gitlab.com/bersace/periodiq/issues/new with full log.",
+        )
+    exit(1)
+
+
+def expand_valid(value, min, max):
+    # From cron-like time or date field, expand all valid values within min-max
+    # interval.
+    valid = set()
+    value = value.replace('*', f'{min}-{max}')
+    intervals = value.split(',')
+    for interval in intervals:
+        range_, _, step = interval.partition('/')
+        step = 1 if '' == step else int(step)
+        start, _, end = range_.partition('-')
+        start = int(start)
+        end = start if '' == end else int(end)
+        # Note that step is not a modulo. cf.
+        # https://stackoverflow.com/questions/27412483/how-do-cron-steps-work
+        valid |= set(range(start, end + 1, step))
+    return sorted(valid)
+
+
+def first(function, iterable):
+    # Return the first item from iterable accepted by function.
+    try:
+        return next(x for x in iterable if function(x))
+    except StopIteration:
+        raise ValueError("No matching value.")
+
+
+def monthesrange(start_year, start_month, end_month):
+    # Switch to zero-base month numbering.
+    start_month -= 1
+    end_month -= 1
+    return (
+        x for _, x in (
+            monthrange(start_year + m // 12, 1 + m % 12)
+            for m in range(start_month, end_month)
+        )
+    )
+
+
 def main():
+    parser = make_argument_parser()
+    args = parser.parse_args()
+
+    logging.getLogger().setLevel(VERBOSITY.get(args.verbose, logging.DEBUG))
+
+    for path in args.path:
+        sys.path.insert(0, path)
+    _, broker = import_broker(args.broker)
+    for module in args.modules:
+        importlib.import_module(module)
+
+    periodic_actors = [
+        a for a in broker.actors.values()
+        if 'periodic' in a.options
+    ]
+    if not periodic_actors:
+        logger.error("No periodic actor to schedule.")
+        return 1
+
+    scheduler = Scheduler(actors=periodic_actors)
+    now = datetime.now()
+    # If we start late in a minute. Pad to start of next minute.
+    if now.second > 55:
+        logger.debug("Skipping to next minute.")
+        sleep(60 - now.second)
+    scheduler.schedule()
+    scheduler.loop()
+
     return 0
 
 
-def entrypoint():
-    pass
+def make_argument_parser():
+    dist = get_distribution('periodiq')
+    parser = argparse.ArgumentParser(
+        prog="periodiq",
+        description="Run periodiq scheduler.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        "broker",
+        help="the broker to use (eg: 'module' or 'module:a_broker')",
+    )
+
+    parser.add_argument(
+        "modules", metavar="module", nargs="*",
+        help="additional python modules to import",
+    )
+
+    parser.add_argument(
+        "--path", "-P", default=".", nargs="*", type=str,
+        help="the module import path (default: %default)",
+    )
+
+    parser.add_argument("--version", action="version", version=dist.version)
+    parser.add_argument(
+        "--verbose", "-v", default=0, action="count",
+        help="turn on verbose log output",
+    )
+
+    return parser
+
+
+class PeriodiqMiddleware(Middleware):
+    actor_options = set(['periodic'])
+
+
+class Scheduler:
+    def __init__(self, actors):
+        self.actors = actors
+        # Q for communicating between main process and signal handler.
+        self.alarm_q = SimpleQueue()
+
+    def loop(self):
+        # Block until signal handler sends True.
+        while self.alarm_q.get(block=True):
+            self.schedule()
+
+    def send_actors(self, actors):
+        for actor in actors:
+            logger.info("Scheduling %s.", actor)
+            actor.send()
+
+    def schedule(self):
+        now = datetime.now()
+        logger.debug("Wake up at %s.", now)
+        self.send_actors([
+            a for a in self.actors
+            if a.options['periodic'].validate(now)
+        ])
+
+        prioritized_actors = sorted([
+            (actor.options['periodic'].next_valid_date(now), actor)
+            for actor in self.actors
+        ], key=lambda x: x[0])  # Sort only on date.
+
+        next_date, _ = prioritized_actors[0]
+        logger.debug("Nothing to do until %s.", next_date)
+        delay = next_date - now
+        delay_s = delay.total_seconds()
+        delay_s, delay_ms = int(delay_s), delay_s % 1
+        logger.debug("Sleeping for %ss (%s).", delay_s, delay)
+        # Sleep microseconds because alarm only accepts integers.
+        sleep(delay_ms)
+        if delay_s:
+            alarm(delay_s)
+            signal(SIGALRM, self.signal_handler)
+        else:
+            self.alarm_q.put_nowait(True)
+
+    def signal_handler(self, *_):
+        logger.debug("Alaaaaarm!")
+        self.alarm_q.put_nowait(True)
 
 
 if '__main__' == __name__:

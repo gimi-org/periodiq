@@ -13,6 +13,9 @@ dramatiq = "^1.5"
 pytest = "^4.3"
 flake8 = "^3.7"
 
+[tool.poetry.scripts]
+periodiq = 'periodiq:entrypoint'
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
