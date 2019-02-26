@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.5"
 dramatiq = "^1.5"
+pendulum = "^2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.3"
