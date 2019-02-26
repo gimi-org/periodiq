@@ -101,9 +101,7 @@ class CronSpec:
         # to current month.
         dom_e = [
             x for x in self.dom if x <= month_days
-        ] + [
-            month_days + x for x in self.dom
-        ]
+        ] + [month_days + self.dom[0]]
         delay_dom = first(lambda x: x >= n.day, dom_e) - n.day
 
         if self.is_dow_restricted and self.is_dom_restricted:
