@@ -29,22 +29,22 @@ def hourly():
 
 
 # For testing purpose, schedule daily in current hour.
-@dramatiq.actor(periodic=cron(f'58 {now.hour} * * *'))
+@dramatiq.actor(periodic=cron('58 {} * * *'.format(now.hour)))
 def daily():
     logger.info("Daily.")
 
 
-@dramatiq.actor(periodic=cron(f'30 10 * * Sun'))
+@dramatiq.actor(periodic=cron('30 10 * * Sun'))
 def weekly():
     logger.info("Ding dong ding dong!")
 
 
-@dramatiq.actor(periodic=cron(f'0 18 1 * *'))
+@dramatiq.actor(periodic=cron('0 18 1 * *'))
 def monthly():
     logger.info("Income day.")
 
 
-@dramatiq.actor(periodic=cron(f'0 0 25 12 *'))
+@dramatiq.actor(periodic=cron('0 0 25 12 *'))
 def yearly():
     logger.info("Merry Chrismas!")
 
