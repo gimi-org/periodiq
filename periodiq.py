@@ -57,7 +57,7 @@ class CronSpec:
         dow = fields[4].lower()
         weekdays = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
         for i, day in enumerate(weekdays):
-            dow = dow.replace(day, f'{i}')
+            dow = dow.replace(day, str(i))
 
         return cls(
             m=expand_valid(fields[0], min=0, max=59),
@@ -191,7 +191,7 @@ def expand_valid(value, min, max):
     # From cron-like time or date field, expand all valid values within min-max
     # interval.
     valid = set()
-    value = value.replace('*', f'{min}-{max}')
+    value = value.replace('*', '{min}-{max}'.format(min=min, max=max))
     intervals = value.split(',')
     for interval in intervals:
         range_, _, step = interval.partition('/')
