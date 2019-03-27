@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
+
+Released 2019 march 27th.
 
 - Support Python 3.5.
 - Always use timezone-aware dates with [pendulum](https://pendulum.eustace.io).
