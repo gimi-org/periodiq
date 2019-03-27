@@ -10,7 +10,7 @@ from datetime import (
     timedelta,
 )
 from pkg_resources import get_distribution
-from queue import SimpleQueue
+from queue import Queue
 from signal import (
     SIGALRM,
     alarm,
@@ -297,7 +297,7 @@ class Scheduler:
     def __init__(self, actors):
         self.actors = actors
         # Q for communicating between main process and signal handler.
-        self.alarm_q = SimpleQueue()
+        self.alarm_q = Queue()
 
     def loop(self):
         # Block until signal handler sends True.
