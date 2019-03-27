@@ -28,6 +28,11 @@ def hourly():
     logger.info("Hourly.")
 
 
+@dramatiq.actor(periodic=cron('1 2 * * *'))
+def dst():
+    logger.info("Skipped on daylight saving time change in Europe/Paris.")
+
+
 # For testing purpose, schedule daily in current hour.
 @dramatiq.actor(periodic=cron('58 {} * * *'.format(now.hour)))
 def daily():

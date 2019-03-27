@@ -5,10 +5,6 @@ import pdb
 import sys
 from copy import deepcopy
 from calendar import monthrange
-from datetime import (
-    datetime,
-    timedelta,
-)
 from pkg_resources import get_distribution
 from queue import Queue
 from signal import (
@@ -18,6 +14,7 @@ from signal import (
 )
 from time import sleep
 
+import pendulum
 from dramatiq import Middleware
 from dramatiq.cli import (
     LOGFORMAT,
@@ -77,19 +74,24 @@ class CronSpec:
         return self.minute, self.hour, self.dom, self.month, self.dow
 
     def next_valid_date(self, last):
+        # Note about DST. periodiq uses pendulum to have timezone-aware, always
+        # valid date. For example, 2019-03-31T02:*:* does not exists in
+        # timezone Europe/Paris. Using pendulum .add() methods never produces
+        # invalid date. Also, pendulum.now() is always at right timezone.
+
         # Reset second and microsecond. It's irrelevant for scheduling.
         n = last.replace(second=0, microsecond=0)
 
         # Next date is at least in one minute.
-        n += timedelta(minutes=1)
+        n = n.add(minutes=1)
 
         # How much minutes to way until next valid minute?
         delay_m = first(lambda x: x >= n.minute, self.minute_e) - n.minute
-        n += timedelta(minutes=delay_m)
+        n = n.add(minutes=delay_m)
 
         # How much hours to wait until next valid hour?
         delay_h = first(lambda x: x >= n.hour, self.hour_e) - n.hour
-        n += timedelta(hours=delay_h)
+        n = n.add(hours=delay_h)
 
         # How much days to wait until next valid weekday?
         last_dow = n.isoweekday() % 7
@@ -110,12 +112,12 @@ class CronSpec:
         else:
             delay_d = delay_dow if self.is_dow_restricted else delay_dom
 
-        n += timedelta(days=delay_d)
+        n = n.add(days=delay_d)
 
         # How much days to wait until next valid month?
         next_month = first(lambda x: x >= n.month, self.month_e)
         delay_d = sum(monthesrange(n.year, n.month, next_month))
-        n += timedelta(days=delay_d)
+        n = n.add(days=delay_d)
 
         return n
 
@@ -246,7 +248,7 @@ def main():
         return 1
 
     scheduler = Scheduler(actors=periodic_actors)
-    now = datetime.now()
+    now = pendulum.now()
     # If we start late in a minute. Pad to start of next minute.
     if now.second > 55:
         logger.debug("Skipping to next minute.")
@@ -310,7 +312,7 @@ class Scheduler:
             actor.send()
 
     def schedule(self):
-        now = datetime.now()
+        now = pendulum.now()
         logger.debug("Wake up at %s.", now)
         self.send_actors([
             a for a in self.actors

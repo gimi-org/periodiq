@@ -3,6 +3,11 @@
 ## Unreleased
 
 - Support Python 3.5.
+- Always use timezone-aware dates with [pendulum](https://pendulum.eustace.io).
+
+  No task should be scheduled on an inexistant date in a timezone. Note that
+  some exotic time zones with DST other than 1h, like Australia/Lord_Howe, will
+  have bug with tasks planified between 2h and 3h AM.
 
 
 ## 0.9.0

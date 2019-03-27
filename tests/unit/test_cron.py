@@ -1,4 +1,4 @@
-from datetime import datetime
+from pendulum import datetime
 
 
 def test_parse():
@@ -206,3 +206,12 @@ def test_validate():
     assert spec.validate(datetime(2019, 1, 15, 18, 30))
     assert not spec.validate(datetime(2019, 1, 16, 18, 30))
     assert spec.validate(datetime(2019, 1, 17, 18, 30))
+
+
+def test_dst_change():
+    from periodiq import cron
+
+    d = datetime(2019, 3, 31, 1, 57, 30, tz='Europe/Paris')
+    s = cron('1 2 * * *').next_valid_date(d)
+    # There is no 2019-03-31T02:01 CET. Skip to April fool. <°)))><
+    assert datetime(2019, 4, 1, 2, 1, tz='Europe/Paris') == s
