@@ -11,6 +11,7 @@ test-unit:
   - export PATH=~/.local/bin:$PATH
   - pip --disable-pip-version-check install --user poetry
   - poetry install
+  - poetry run periodiq --help
   - poetry run flake8 example.py periodiq.py tests/
   - poetry run pytest -x tests/unit/
   cache:

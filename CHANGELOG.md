@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix --help.
+
+
 ## 0.10.0
 
 Released 2019 march 27th.

@@ -279,7 +279,7 @@ def make_argument_parser():
 
     parser.add_argument(
         "--path", "-P", default=".", nargs="*", type=str,
-        help="the module import path (default: %default)",
+        help="the module import path (default: %(default)s)",
     )
 
     parser.add_argument("--version", action="version", version=dist.version)
