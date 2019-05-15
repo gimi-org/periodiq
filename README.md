@@ -25,6 +25,8 @@ $ pip install periodiq
 Declare periodic tasks like this:
 
 ``` python
+# filename: app.py
+
 import dramatiq
 from periodiq import PeriodicMiddleWare, cron
 
@@ -39,7 +41,7 @@ def hourly():
 Then, run scheduler with:
 
 ``` console
-$ periodiq -v my.broker.module
+$ periodiq -v app
 ```
 
 
