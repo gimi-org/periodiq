@@ -177,7 +177,9 @@ def entrypoint():
     logging.basicConfig(level=logging.INFO, format=LOGFORMAT)
 
     try:
-        exit(main())
+        parser = make_argument_parser()
+        args = parser.parse_args()
+        exit(main(args))
     except (pdb.bdb.BdbQuit, KeyboardInterrupt):
         logger.info("Interrupted.")
     except Exception:
@@ -227,10 +229,7 @@ def monthesrange(start_year, start_month, end_month):
     )
 
 
-def main():
-    parser = make_argument_parser()
-    args = parser.parse_args()
-
+def main(args):
     logging.getLogger().setLevel(VERBOSITY.get(args.verbose, logging.DEBUG))
 
     for path in args.path:
