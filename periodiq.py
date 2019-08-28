@@ -62,13 +62,32 @@ class CronSpec:
             dom=expand_valid(fields[2], min=1, max=31),
             month=expand_valid(fields[3], min=1, max=12),
             dow=expand_valid(dow, min=0, max=7),
+            parsed_from=spec,
         )
 
-    def __init__(self, m, h, dom, month, dow):
+    def __init__(self, m, h, dom, month, dow, parsed_from=None):
         self.setup(m, h, dom, month, dow)
+        self.parsed_from = parsed_from
 
     def __eq__(self, other):
         return self.astuple() == other.astuple()
+
+    def __str__(self):
+        if self.parsed_from is not None:
+            return self.parsed_from
+        else:
+            return ' '.join([
+                format_cron(self.minute, min_=0, max_=59),
+                format_cron(self.hour, min_=0, max_=23),
+                format_cron(self.dom, min_=1, max_=31),
+                format_cron(self.month, min_=1, max_=12),
+                format_cron(self.dow, min_=0, max_=7, names=[
+                    'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+                ]),
+            ])
+
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, self)
 
     def astuple(self):
         return self.minute, self.hour, self.dom, self.month, self.dow
@@ -147,6 +166,8 @@ class CronSpec:
             self.is_dow_restricted = len(dow) < 7
             self.dow = dow
             self.dow_e = dow + [7 + dow[0]]
+        # Invalidate string representation.
+        self.parsed_from = None
 
     def validate(self, date):
         # Returns whether this date match the specified constraints.
@@ -217,6 +238,37 @@ def first(function, iterable):
         raise ValueError("No matching value.")
 
 
+def format_cron(values, min_, max_, names=None):
+    if min_ == values[0] and values[-1] == max_:
+        return '*'
+    else:
+        return ','.join(
+            format_interval(*i, names=names)
+            for i in group_intervals(values)
+        )
+
+
+def format_interval(start, stop, names=None):
+    if stop == start:
+        return str(start if names is None else names[start])
+    elif names:
+        return ','.join(names[start:stop+1])
+    else:
+        return '%s-%s' % (start, stop)
+
+
+def group_intervals(values):
+    last = values[0]
+    start = last
+    for v in values[1:]:
+        diff = v - last
+        if diff > 1:
+            yield start, last
+            start = v
+        last = v
+    yield start, last
+
+
 def monthesrange(start_year, start_month, end_month):
     # Switch to zero-base month numbering.
     start_month -= 1
@@ -231,6 +283,7 @@ def monthesrange(start_year, start_month, end_month):
 
 def main(args):
     logging.getLogger().setLevel(VERBOSITY.get(args.verbose, logging.DEBUG))
+    logger.info("Starting Periodiq, a simple scheduler for Dramatiq.")
 
     for path in args.path:
         sys.path.insert(0, path)
@@ -245,6 +298,7 @@ def main(args):
     if not periodic_actors:
         logger.error("No periodic actor to schedule.")
         return 1
+    print_periodic_actors(periodic_actors)
 
     scheduler = Scheduler(actors=periodic_actors)
     now = pendulum.now()
@@ -288,6 +342,23 @@ def make_argument_parser():
     )
 
     return parser
+
+
+def print_periodic_actors(actors):
+    p = logger.info
+    p("Registered actors:")
+    p("")
+    p("    %-24s module:actor@queue" % ('m h dom mon dow',))
+    p("    %-24s ------------------" % ('-' * 24, ))
+    for actor in actors:
+        kw = dict(
+            module=actor.fn.__module__,
+            name=actor.actor_name,
+            queue=actor.queue_name,
+            spec=str(actor.options['periodic']),
+        )
+        p("    %(spec)-24s %(module)s:%(name)s@%(queue)s " % kw)
+    p("")
 
 
 class PeriodiqMiddleware(Middleware):
