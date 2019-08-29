@@ -5,6 +5,7 @@ import pdb
 import sys
 from copy import deepcopy
 from calendar import monthrange
+from datetime import timedelta
 from pkg_resources import get_distribution
 from queue import Queue
 from signal import (
@@ -398,7 +399,7 @@ class Scheduler:
             actor.send_with_options(scheduled_at=now_str)
 
     def schedule(self):
-        now = pendulum.now()
+        now = (pendulum.now() + timedelta(seconds=0.5)).replace(microsecond=0)
         logger.debug("Wake up at %s.", now)
         self.send_actors([
             a for a in self.actors
@@ -412,7 +413,8 @@ class Scheduler:
 
         next_date, _ = prioritized_actors[0]
         logger.debug("Nothing to do until %s.", next_date)
-        delay = next_date - now
+        # Refresh now because we may have spent some time sending messages.
+        delay = next_date - pendulum.now()
         delay_s = delay.total_seconds()
         delay_s, delay_ms = int(delay_s), delay_s % 1
         logger.debug("Sleeping for %ss (%s).", delay_s, delay)
