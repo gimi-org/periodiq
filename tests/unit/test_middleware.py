@@ -26,7 +26,7 @@ def test_skip_outdated(mocker):
     from periodiq import SkipMessage
 
     message = periodic_actor.message_with_options(
-        scheduled_at=datetime(2019, 8, 29, 10, 54, 0))
+        scheduled_at=str(datetime(2019, 8, 29, 10, 54, 0)))
     now = mocker.patch('periodiq.pendulum.now')
     now.return_value = datetime(2019, 8, 29, 10, 54, middleware.skip_delay + 1)
 
@@ -41,7 +41,7 @@ def test_process_regular_message(mocker):
 
 def test_process_ontime_message(mocker):
     message = periodic_actor.message_with_options(
-        scheduled_at=datetime(2019, 8, 29, 10, 54, 0))
+        scheduled_at=str(datetime(2019, 8, 29, 10, 54, 0)))
     now = mocker.patch('periodiq.pendulum.now')
     now.return_value = datetime(2019, 8, 29, 10, 54, 1)
 

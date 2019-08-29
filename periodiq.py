@@ -374,7 +374,7 @@ class PeriodiqMiddleware(Middleware):
             return
 
         now = pendulum.now()
-        scheduled_at = message.options['scheduled_at']
+        scheduled_at = pendulum.parse(message.options['scheduled_at'])
         delta = now - scheduled_at
         if delta.total_seconds() > self.skip_delay:
             raise SkipMessage("Message is older than %ss." % self.skip_delay)
@@ -392,9 +392,10 @@ class Scheduler:
             self.schedule()
 
     def send_actors(self, actors, now):
+        now_str = str(now)
         for actor in actors:
-            logger.info("Scheduling %s.", actor)
-            actor.send_with_options(run_at=now)
+            logger.info("Scheduling %s at %s.", actor, now_str)
+            actor.send_with_options(scheduled_at=now_str)
 
     def schedule(self):
         now = pendulum.now()
