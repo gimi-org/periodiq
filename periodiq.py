@@ -374,6 +374,11 @@ class PeriodiqMiddleware(Middleware):
         if 'periodic' not in actor.options:
             return
 
+        msg_str = '%s:%s' % (message.message_id, message)
+        if 'scheduled_at' not in message.options:
+            logger.debug("%s looks manually triggered.", msg_str)
+            return
+
         now = pendulum.now()
         scheduled_at = pendulum.parse(message.options['scheduled_at'])
         delta = now - scheduled_at
