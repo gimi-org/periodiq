@@ -21,6 +21,7 @@ from dramatiq.cli import (
     VERBOSITY,
     import_broker,
 )
+from dramatiq.middleware import SkipMessage
 
 
 logger = logging.getLogger('periodiq')
@@ -364,6 +365,20 @@ def print_periodic_actors(actors):
 class PeriodiqMiddleware(Middleware):
     actor_options = set(['periodic'])
 
+    def __init__(self, skip_delay=30):
+        self.skip_delay = skip_delay
+
+    def before_process_message(self, broker, message):
+        actor = broker.actors[message.actor_name]
+        if 'periodic' not in actor.options:
+            return
+
+        now = pendulum.now()
+        scheduled_at = message.options['scheduled_at']
+        delta = now - scheduled_at
+        if delta.total_seconds() > self.skip_delay:
+            raise SkipMessage("Message is older than %ss." % self.skip_delay)
+
 
 class Scheduler:
     def __init__(self, actors):
@@ -376,10 +391,10 @@ class Scheduler:
         while self.alarm_q.get(block=True):
             self.schedule()
 
-    def send_actors(self, actors):
+    def send_actors(self, actors, now):
         for actor in actors:
             logger.info("Scheduling %s.", actor)
-            actor.send()
+            actor.send_with_options(run_at=now)
 
     def schedule(self):
         now = pendulum.now()
@@ -387,7 +402,7 @@ class Scheduler:
         self.send_actors([
             a for a in self.actors
             if a.options['periodic'].validate(now)
-        ])
+        ], now=now)
 
         prioritized_actors = sorted([
             (actor.options['periodic'].next_valid_date(now), actor)

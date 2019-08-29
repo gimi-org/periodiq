@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Print crontab on startup.
+- Skip outdated messages.
 
 
 ## 0.10.1

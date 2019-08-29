@@ -12,6 +12,7 @@ project fills the gap.
 - Easy on ressources using SIGALRM.
 - No dependency except dramatiq ones.
 - CLI consistent with dramatiq.
+- Skip outdated message.
 
 
 ## Installation
@@ -30,7 +31,7 @@ Declare periodic tasks like this:
 import dramatiq
 from periodiq import PeriodiqMiddleWare, cron
 
-broker.add_middleware(PeriodiqMiddleWare())
+broker.add_middleware(PeriodiqMiddleWare(skip_delay=30))
 
 @dramatiq.actor(periodic=cron('0 * * * *))
 def hourly():
