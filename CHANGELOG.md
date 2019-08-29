@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Print crontab on startup.
+- Skip outdated messages.
+
+
+## 0.10.1
+
+Released 2019 august 27th.
+
 - Fix --help.
 
 
