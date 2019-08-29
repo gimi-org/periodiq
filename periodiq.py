@@ -5,6 +5,7 @@ import pdb
 import sys
 from copy import deepcopy
 from calendar import monthrange
+from datetime import timedelta
 from pkg_resources import get_distribution
 from queue import Queue
 from signal import (
@@ -347,7 +348,7 @@ def make_argument_parser():
 
 def print_periodic_actors(actors):
     p = logger.info
-    p("Registered actors:")
+    p("Registered periodic actors:")
     p("")
     p("    %-24s module:actor@queue" % ('m h dom mon dow',))
     p("    %-24s ------------------" % ('-' * 24, ))
@@ -373,11 +374,22 @@ class PeriodiqMiddleware(Middleware):
         if 'periodic' not in actor.options:
             return
 
+        msg_str = '%s:%s' % (message.message_id, message)
+        if 'scheduled_at' not in message.options:
+            logger.debug("%s looks manually triggered.", msg_str)
+            return
+
         now = pendulum.now()
-        scheduled_at = message.options['scheduled_at']
+        scheduled_at = pendulum.parse(message.options['scheduled_at'])
         delta = now - scheduled_at
+
         if delta.total_seconds() > self.skip_delay:
-            raise SkipMessage("Message is older than %ss." % self.skip_delay)
+            logger.info("Skipping %s older than %ss", msg_str, self.skip_delay)
+            raise SkipMessage()
+        else:
+            logger.info(
+                "Processing %s scheduled at %s.",
+                msg_str, message.options['scheduled_at'])
 
 
 class Scheduler:
@@ -392,12 +404,13 @@ class Scheduler:
             self.schedule()
 
     def send_actors(self, actors, now):
+        now_str = str(now)
         for actor in actors:
-            logger.info("Scheduling %s.", actor)
-            actor.send_with_options(run_at=now)
+            logger.info("Scheduling %s at %s.", actor, now_str)
+            actor.send_with_options(scheduled_at=now_str)
 
     def schedule(self):
-        now = pendulum.now()
+        now = (pendulum.now() + timedelta(seconds=0.5)).replace(microsecond=0)
         logger.debug("Wake up at %s.", now)
         self.send_actors([
             a for a in self.actors
@@ -411,7 +424,8 @@ class Scheduler:
 
         next_date, _ = prioritized_actors[0]
         logger.debug("Nothing to do until %s.", next_date)
-        delay = next_date - now
+        # Refresh now because we may have spent some time sending messages.
+        delay = next_date - pendulum.now()
         delay_s = delay.total_seconds()
         delay_s, delay_ms = int(delay_s), delay_s % 1
         logger.debug("Sleeping for %ss (%s).", delay_s, delay)
