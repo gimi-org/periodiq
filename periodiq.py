@@ -347,7 +347,7 @@ def make_argument_parser():
 
 def print_periodic_actors(actors):
     p = logger.info
-    p("Registered actors:")
+    p("Registered periodic actors:")
     p("")
     p("    %-24s module:actor@queue" % ('m h dom mon dow',))
     p("    %-24s ------------------" % ('-' * 24, ))
