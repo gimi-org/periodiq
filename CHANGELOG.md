@@ -4,6 +4,8 @@
 
 - Print crontab on startup.
 - Skip outdated messages.
+- Don't require alarm syscall to declare periodic tasks. Reported by
+  @sovetnikov.
 
 
 ## 0.10.1
