@@ -6,6 +6,8 @@
 - Skip outdated messages.
 - Don't require alarm syscall to declare periodic tasks. Reported by
   @sovetnikov.
+- Reschedule immediatly if schedule loop last after next tasks date. Reported by
+  @sovetnikov.
 
 
 ## 0.10.1
