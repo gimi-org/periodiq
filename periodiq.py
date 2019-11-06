@@ -426,6 +426,10 @@ class Scheduler:
         logger.debug("Nothing to do until %s.", next_date)
         # Refresh now because we may have spent some time sending messages.
         delay = next_date - pendulum.now()
+        if delay <= 0:
+            logger.warning("Negative delay. Scheduling immediately.")
+            return self.schedule()
+
         delay_s = delay.total_seconds()
         delay_s, delay_ms = int(delay_s), delay_s % 1
         logger.debug("Sleeping for %ss (%s).", delay_s, delay)
