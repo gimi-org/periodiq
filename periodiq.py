@@ -8,11 +8,14 @@ from calendar import monthrange
 from datetime import timedelta
 from pkg_resources import get_distribution
 from queue import Queue
-from signal import (
-    SIGALRM,
-    alarm,
-    signal,
-)
+try:
+    from signal import (
+        SIGALRM,
+        alarm,
+        signal,
+    )
+except ImportError:
+    SIGALARM = alarm = signal = None
 from time import sleep
 
 import pendulum
@@ -285,6 +288,10 @@ def monthesrange(start_year, start_month, end_month):
 
 def main(args):
     logging.getLogger().setLevel(VERBOSITY.get(args.verbose, logging.DEBUG))
+    if alarm is None:
+        logger.critical("Unsupported system: alarm syscall is not available.")
+        return 1
+
     logger.info("Starting Periodiq, a simple scheduler for Dramatiq.")
 
     for path in args.path:
