@@ -43,6 +43,14 @@ Then, run scheduler with:
 
 ``` console
 $ periodiq -v app
+[INFO] Starting Periodiq, a simple scheduler for Dramatiq.
+[INFO] Registered periodic actors:
+[INFO]
+[INFO]     m h dom mon dow          module:actor@queue
+[INFO]     ------------------------ ------------------
+[INFO]     0 * * * *                app:hourly@default
+[INFO]
+...
 ```
 
 
