@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+
+## 0.12.0
+
+Released 2019 november 7h.
 
 - Print crontab on startup.
 - Skip outdated messages.
