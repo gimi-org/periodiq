@@ -1,6 +1,6 @@
 # Simple Scheduler for Dramatiq Task Queue
 
-[dramatiq](https://dramatiq.io) task queue is great but lake a scheduler. This
+[dramatiq](https://dramatiq.io) task queue is great but lacks a scheduler. This
 project fills the gap.
 
 
@@ -10,7 +10,7 @@ project fills the gap.
 - Single process.
 - Fast and simple implementation.
 - Easy on ressources using SIGALRM.
-- No dependency except dramatiq ones.
+- No dependencies except dramatiq ones.
 - CLI consistent with dramatiq.
 - Skip outdated message.
 
@@ -56,6 +56,6 @@ $ periodiq -v app
 
 ## Support
 
-If you need help or found a bug, mind [opening a GitLab
+If you need help or found a bug, consider [opening a GitLab
 issue](https://gitlab.com/bersace/periodiq/issues/new) on the project. French
 and English spoken.
