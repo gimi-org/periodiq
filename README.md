@@ -29,9 +29,9 @@ Declare periodic tasks like this:
 # filename: app.py
 
 import dramatiq
-from periodiq import PeriodiqMiddleWare, cron
+from periodiq import PeriodiqMiddleware, cron
 
-broker.add_middleware(PeriodiqMiddleWare(skip_delay=30))
+broker.add_middleware(PeriodiqMiddleware(skip_delay=30))
 
 @dramatiq.actor(periodic=cron('0 * * * *))
 def hourly():
