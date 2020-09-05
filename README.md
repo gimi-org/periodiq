@@ -9,7 +9,7 @@ project fills the gap.
 - Cron-like scheduling.
 - Single process.
 - Fast and simple implementation.
-- Easy on ressources using SIGALRM.
+- Easy on resources using SIGALRM.
 - No dependencies except dramatiq ones.
 - CLI consistent with dramatiq.
 - Skip outdated message.
@@ -33,7 +33,7 @@ from periodiq import PeriodiqMiddleware, cron
 
 broker.add_middleware(PeriodiqMiddleware(skip_delay=30))
 
-@dramatiq.actor(periodic=cron('0 * * * *))
+@dramatiq.actor(periodic=cron('0 * * * *'))
 def hourly():
     # Do something each hour…
     ...
