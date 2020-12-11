@@ -94,7 +94,7 @@ setuptools.setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'periodiq = periodiq.__main__:main',
+            'periodic = periodic.__main__:main',
         ],
     },
 )
