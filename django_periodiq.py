@@ -30,8 +30,8 @@ stdout = OutputWrapper(sys.stdout)
 logger = logging.getLogger('periodiq')
 
 
-def cron(spec):
-    return CronSpec.parse(spec)
+def cron(minute='*', hour='*', day_of_month='*', month='*', day_of_week='*'):
+    return CronSpec.parse('{} {} {} {} {}'.format(minute, hour, day_of_month, month, day_of_week))
 
 
 class CronSpec:
