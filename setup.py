@@ -12,7 +12,7 @@ except (AttributeError, ImportError):
     def _pyimp():
         return 'Python (unknown)'
 
-NAME = 'periodiq'
+NAME = 'django_periodiq'
 
 # -*- Python Versions -*-
 PYIMP = _pyimp()
@@ -56,11 +56,6 @@ def reqs(*f):
     return [req for subreq in _reqs(*f) for req in subreq]
 
 
-def extras(*p):
-    """Parse requirement in the requirements/extras/ directory."""
-    return reqs('extras', *p)
-
-
 def install_requires():
     """Get list of requirements required for installation."""
     return reqs('default.txt')
@@ -92,9 +87,9 @@ setuptools.setup(
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
     include_package_data=True,
     zip_safe=False,
-    entry_points={
-        'console_scripts': [
-            'periodic = periodic.__main__:main',
-        ],
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'django_periodiq = periodiq.__main__:main',
+    #     ],
+    # },
 )
