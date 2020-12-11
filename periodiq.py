@@ -201,7 +201,7 @@ class CronSpec:
         return True
 
 
-def entrypoint(broker, modules, verbose, path):
+def entrypoint(broker='gimi', modules=[], verbose=logging.INFO, path='.'):
     try:
         exit(main(broker=broker, modules=modules, verbose=verbose, path=path))
     except (pdb.bdb.BdbQuit, KeyboardInterrupt):
@@ -448,3 +448,7 @@ class Scheduler:
     def signal_handler(self, *_):
         stdout.write("Alaaaaarm!")
         self.alarm_q.put_nowait(True)
+
+
+if '__main__' == __name__:
+    entrypoint()
