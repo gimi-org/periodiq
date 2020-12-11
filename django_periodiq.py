@@ -8,6 +8,7 @@ from calendar import monthrange
 from datetime import timedelta
 from pkg_resources import get_distribution
 from queue import Queue
+
 try:
     from signal import (
         SIGALRM,
@@ -418,7 +419,7 @@ def print_periodic_actors(actors):
     stdout.write("Registered periodic actors:")
     stdout.write("")
     stdout.write("    %-24s module:actor@queue" % ('m h dom month dow'))
-    stdout.write("    %-24s ------------------" % ('-' * 24, ))
+    stdout.write("    %-24s ------------------" % ('-' * 24,))
     for actor in actors:
         kw = dict(
             module=actor.fn.__module__,
@@ -430,9 +431,9 @@ def print_periodic_actors(actors):
     stdout.write("")
 
 
-def entrypoint(broker='gimi', modules=[], verbose=logging.INFO, path='.'):
+def entrypoint(schedule_module, broker='gimi', modules=[], verbose=logging.INFO, path='.'):
     try:
-        exit(main(broker=broker, modules=modules, verbose=verbose, path=path))
+        exit(main(broker=broker, modules=modules, verbose=verbose, path=path, schedule_module=schedule_module))
     except (pdb.bdb.BdbQuit, KeyboardInterrupt):
         stdout.write("Interrupted.")
     except Exception as e:
@@ -445,17 +446,18 @@ def entrypoint(broker='gimi', modules=[], verbose=logging.INFO, path='.'):
 
 
 def main(
-    broker,
-    modules,
-    path,
-    verbose=logging.DEBUG,
+        broker,
+        modules,
+        path,
+        schedule_module,
+        verbose=logging.DEBUG,
 ):
     logger.setLevel(verbose)
     if alarm is None:
         stdout.write("Unsupported system: alarm syscall is not available.")
         return 1
 
-    stdout.write("Starting Periodiq, a simple scheduler for Dramatiq.")
+    stdout.write("Starting Django Periodiq, a simple scheduler for Django-Dramatiq.")
 
     for _path in path:
         sys.path.insert(0, _path)
@@ -463,12 +465,28 @@ def main(
     for module in modules:
         importlib.import_module(module)
 
-    periodic_actors = [
-        a for a in broker.actors.values() if 'periodic' in a.options
-    ]
+    actors_map = {actor.actor_name: actor for actor in broker.actors.values()}
+
+    periodic_actors = set(
+        actor for actor in broker.actors.values() if 'periodic' in actor.options
+    )
+
+    json_scheduler = importlib.import_module(schedule_module).schedule
+    for task_name, task_cron_config in json_scheduler.items():
+        task_name = task_cron_config['task'].split('.')[-1]
+        task_schedule_cron = task_cron_config['schedule']
+
+        try:
+            _actor = actors_map[task_name]
+            _actor.options['periodic'] = task_schedule_cron
+            periodic_actors.add(actors_map[task_name])
+        except KeyError:
+            stdout.write('A task declared in the scheduler is missing from the app: {}'.format(task_name))
+
     if not periodic_actors:
         stdout.write("No periodic actor to schedule.")
         return 1
+
     print_periodic_actors(periodic_actors)
 
     scheduler = Scheduler(actors=periodic_actors)
