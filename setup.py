@@ -74,7 +74,7 @@ def long_description():
 
 setuptools.setup(
     name=NAME,
-    packages=['periodiq'],
+    packages=setuptools.find_packages(exclude=['t', 't.*']),
     version='0.0.1a',
     description='Periodiq',
     long_description=long_description(),
