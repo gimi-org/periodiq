@@ -12,7 +12,7 @@ except (AttributeError, ImportError):
     def _pyimp():
         return 'Python (unknown)'
 
-NAME = 'django_periodiq'
+NAME = 'periodiq'
 
 # -*- Python Versions -*-
 PYIMP = _pyimp()
@@ -81,7 +81,7 @@ setuptools.setup(
     name=NAME,
     packages=setuptools.find_packages(exclude=['t', 't.*']),
     version='0.0.1a',
-    description='Django Periodiq',
+    description='Periodiq',
     long_description=long_description(),
     author='slav',
     author_email='',
