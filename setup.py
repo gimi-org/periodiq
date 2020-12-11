@@ -76,7 +76,7 @@ setuptools.setup(
     name=NAME,
     packages=setuptools.find_packages(exclude=['t', 't.*']),
     version='0.0.1a',
-    description='Periodiq',
+    description='Django Periodiq',
     long_description=long_description(),
     author='slav',
     author_email='',
@@ -87,10 +87,5 @@ setuptools.setup(
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
     include_package_data=True,
     zip_safe=False,
-    py_modules=['periodiq', ]
-    # entry_points={
-    #     'console_scripts': [
-    #         'django_periodiq = periodiq.__main__:main',
-    #     ],
-    # },
+    py_modules=['django_periodiq', ]
 )
