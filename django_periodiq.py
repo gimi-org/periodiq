@@ -272,7 +272,7 @@ class Scheduler:
         now_str = str(now)
         for actor in actors:
             stdout.write("Scheduling {} at {}.".format(actor, now_str))
-            actor.send_with_options(scheduled_at=now_str)
+            actor.send_with_options(args=None, kwargs=None, delay=None, scheduled_at=now_str)
 
     def schedule(self):
         now = (pendulum.now() + timedelta(seconds=0.5)).replace(microsecond=0)
