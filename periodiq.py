@@ -29,6 +29,7 @@ from dramatiq.cli import (
 )
 
 stdout = OutputWrapper(sys.stdout)
+NoneType = object()
 
 logger = logging.getLogger('periodiq')
 
@@ -368,13 +369,24 @@ def print_periodic_actors(actors):
 
 
 class PeriodiqMiddleware(Middleware):
-    actor_options = set(['periodic'])
+    actor_options = set(['periodic', 'periodic_skip_delay'])
 
-    def __init__(self, skip_delay=30):
+    def __init__(self, skip_delay=NoneType):
+        if skip_delay is NoneType:
+            skip_delay = 30
         self.skip_delay = skip_delay
 
     def before_process_message(self, broker, message):
         actor = broker.actors[message.actor_name]
+        
+        skip_delay = actor.options.get('periodic_skip_delay', NoneType)
+        if skip_delay is NoneType:
+            skip_delay = self.skip_delay
+        
+        if not skip_delay:
+            # current values 0 or None
+            return
+        
         if 'periodic' not in actor.options:
             return
 
@@ -387,13 +399,11 @@ class PeriodiqMiddleware(Middleware):
         scheduled_at = pendulum.parse(message.options['scheduled_at'])
         delta = now - scheduled_at
 
-        if delta.total_seconds() > self.skip_delay:
-            stdout.write("Skipping %s older than %ss", msg_str, self.skip_delay)
+        if delta.total_seconds() > skip_delay:
+            stdout.write("Skipping %s older than %ss", msg_str, skip_delay)
             raise SkipMessage()
         else:
-            stdout.write(
-                "Processing %s scheduled at %s.",
-                msg_str, message.options['scheduled_at'])
+            stdout.write("Processing %s scheduled at %s.", msg_str, message.options['scheduled_at'])
 
 
 class Scheduler:
