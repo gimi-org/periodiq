@@ -369,7 +369,7 @@ def print_periodic_actors(actors):
 
 
 class PeriodiqMiddleware(Middleware):
-    actor_options = set(['periodic'])
+    actor_options = set(['periodic', 'periodic_skip_delay'])
 
     def __init__(self, skip_delay=NoneType):
         if skip_delay is NoneType:
