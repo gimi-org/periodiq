@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0 — Released April 2025
+- Added compatibility with Python 3.12
+- Updated Pendulum version support to >=2.1,<4.0
+- Updated to new django version
+
 
 ## 0.12.0
 
