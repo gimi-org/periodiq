@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "django-periodiq"
+version = "0.13.0"
+description = "Cron-like scheduling for Django using Dramatiq"
+authors = ["Your Name <you@example.com>"]
+packages = [{ include = "django_periodiq" }]
+license = "BSD-3-Clause"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+django = ">=3.2,<4.0"
+dramatiq = ">=1.16,<2.0"
+pendulum = ">=3.0,<4.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
