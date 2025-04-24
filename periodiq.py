@@ -207,7 +207,7 @@ def entrypoint(broker, modules, verbose, path):
     except (pdb.bdb.BdbQuit, KeyboardInterrupt):
         stdout.write("Interrupted.")
     except Exception as e:
-        stdout.write('Unhandled error: {}, stack: {}'.format(e, traceback.format_exc()))
+        stdout.write(f'Unhandled error: {e}, stack: {traceback.format_exc()}')
         stdout.write(
             "Please file an issue at "
             "https://gitlab.com/bersace/periodiq/issues/new with full log.",
@@ -380,7 +380,7 @@ class PeriodiqMiddleware(Middleware):
 
         msg_str = '%s:%s' % (message.message_id, message)
         if 'scheduled_at' not in message.options:
-            stdout.write("%s looks manually triggered.", msg_str)
+            stdout.write(f"{msg_str} looks manually triggered.")
             return
 
         now = pendulum.now()
@@ -388,12 +388,10 @@ class PeriodiqMiddleware(Middleware):
         delta = now - scheduled_at
 
         if delta.total_seconds() > self.skip_delay:
-            stdout.write("Skipping %s older than %ss", msg_str, self.skip_delay)
+            stdout.write(f"Skipping {msg_str} older than {self.skip_delay}s")
             raise SkipMessage()
         else:
-            stdout.write(
-                "Processing %s scheduled at %s.",
-                msg_str, message.options['scheduled_at'])
+            stdout.write(f"Processing {msg_str} scheduled at {message.options['scheduled_at']}.")
 
 
 class Scheduler:
@@ -410,12 +408,12 @@ class Scheduler:
     def send_actors(self, actors, now):
         now_str = str(now)
         for actor in actors:
-            stdout.write("Scheduling {} at {}.".format(actor, now_str))
+            stdout.write(f"Scheduling {actor} at {now_str}.")
             actor.send_with_options(scheduled_at=now_str)
 
     def schedule(self):
         now = (pendulum.now() + timedelta(seconds=0.5)).replace(microsecond=0)
-        stdout.write("Wake up at {}.".format(now))
+        stdout.write(f"Wake up at {now}.")
         self.send_actors([
             a for a in self.actors
             if a.options['periodic'].validate(now)
@@ -427,7 +425,7 @@ class Scheduler:
         ], key=lambda x: x[0])  # Sort only on date.
 
         next_date, _ = prioritized_actors[0]
-        stdout.write("Nothing to do until {}.".format(next_date))
+        stdout.write(f"Nothing to do until {next_date}.")
         # Refresh now because we may have spent some time sending messages.
         delay = next_date - pendulum.now()
         if delay.total_seconds() <= 0:
@@ -436,7 +434,7 @@ class Scheduler:
 
         delay_s = delay.total_seconds()
         delay_s, delay_ms = int(delay_s), delay_s % 1
-        stdout.write("Sleeping for {} ({}).".format(delay_s, delay))
+        stdout.write(f"Sleeping for {delay_s} ({delay}).")
         # Sleep microseconds because alarm only accepts integers.
         sleep(delay_ms)
         if delay_s:
