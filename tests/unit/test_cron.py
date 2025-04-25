@@ -1,8 +1,9 @@
 from pendulum import datetime
 
-def test_parse():
-    from django_periodiq.periodiq import cron
+from periodiq import CronSpec, cron, format_interval, group_intervals
 
+
+def test_parse():
     spec = cron('* * * * *')
     assert list(range(0, 60)) == spec.minute
     assert list(range(0, 24)) == spec.hour
@@ -28,7 +29,6 @@ def test_parse():
 
 def test_minutely():
     # * * * * *
-    from django_periodiq.periodiq import CronSpec
 
     spec = CronSpec(
         m=list(range(0, 60)),
@@ -44,8 +44,6 @@ def test_minutely():
 
 def test_hourly():
     # 30 * * * *
-    from django_periodiq.periodiq import CronSpec
-
 
     spec = CronSpec(
         m=[30],
@@ -64,7 +62,6 @@ def test_hourly():
 
 def test_daily():
     # 30 18 * * *
-    from django_periodiq.periodiq import CronSpec
 
     spec = CronSpec(
         m=[30],
@@ -83,7 +80,6 @@ def test_daily():
 
 def test_weekly():
     # 30 18 * * Thu
-    from django_periodiq.periodiq import CronSpec
 
     spec = CronSpec(
         m=[30],
@@ -110,7 +106,6 @@ def test_weekly():
 
 def test_monthly():
     # 30 18 15 * *
-    from django_periodiq.periodiq import CronSpec
 
     spec = CronSpec(
         m=[30],
@@ -146,7 +141,6 @@ def test_monthly():
 
 def test_mixed_weekly_monthly():
     # 30 18 15 * Thu
-    from django_periodiq.periodiq import CronSpec
 
     spec = CronSpec(
         m=[30],
@@ -171,7 +165,6 @@ def test_mixed_weekly_monthly():
 
 def test_yearly():
     # 30 18 15 1 *
-    from django_periodiq.periodiq import CronSpec
 
     spec = CronSpec(
         m=[30],
@@ -193,7 +186,6 @@ def test_yearly():
 
 
 def test_validate():
-    from django_periodiq.periodiq import CronSpec
 
     spec = CronSpec(
         m=[30],
@@ -209,7 +201,6 @@ def test_validate():
 
 
 def test_dst_change():
-    from django_periodiq.periodiq import cron
 
     d = datetime(2019, 3, 31, 1, 57, 30, tz='Europe/Paris')
     s = cron('1 2 * * *').next_valid_date(d)
@@ -218,7 +209,6 @@ def test_dst_change():
 
 
 def test_format():
-    from django_periodiq.periodiq import cron
 
     minutely = cron('* * * * *')
     assert '* * * * *' == str(minutely)
@@ -238,7 +228,6 @@ def test_format():
 
 
 def test_group_intervals():
-    from django_periodiq.periodiq import group_intervals
 
     res = list(group_intervals([0, 2, 5]))
     wanted = [(0, 0), (2, 2), (5, 5)]
@@ -250,7 +239,6 @@ def test_group_intervals():
 
 
 def test_format_interval():
-    from django_periodiq.periodiq import format_interval
 
     assert '0' == format_interval(start=0, stop=0)
     assert '1-2' == format_interval(start=1, stop=2)
