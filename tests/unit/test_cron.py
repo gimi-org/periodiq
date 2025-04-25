@@ -1,6 +1,6 @@
 from pendulum import datetime
 
-from periodiq import CronSpec, cron, format_interval, group_intervals
+from django_periodiq import CronSpec, cron, format_interval, group_intervals
 
 
 def test_parse():

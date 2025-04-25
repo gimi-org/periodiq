@@ -4,7 +4,7 @@ import pytest
 from dramatiq.brokers.stub import StubBroker
 from dramatiq import actor
 
-from periodiq import cron, PeriodiqMiddleware
+from django_periodiq import cron, PeriodiqMiddleware
 
 
 broker = StubBroker()
@@ -23,7 +23,7 @@ def regular_actor():
 
 
 def test_skip_outdated(mocker):
-    from periodiq import SkipMessage
+    from django_periodiq import SkipMessage
 
     message = periodic_actor.message_with_options(
         scheduled_at=str(datetime(2019, 8, 29, 10, 54, 0)))

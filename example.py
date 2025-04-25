@@ -3,7 +3,7 @@ from datetime import datetime
 
 import dramatiq
 from dramatiq.brokers.stub import StubBroker
-from periodiq import cron, PeriodiqMiddleware
+from django_periodiq import cron, PeriodiqMiddleware
 
 
 broker = StubBroker()

@@ -2,7 +2,10 @@
 name = "django-periodiq"
 version = "0.13.0"
 description = "Django cron for Dramatiq"
-authors = ["Your Name <you@example.com>"]
+authors = ["duyen.huynh@gimitheapp.com"]
+license = "MIT"  # optional, but recommended
+readme = "README.md"  # optional, if you have one
+include = ["django_periodiq.py"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -13,8 +16,3 @@ pendulum = ">=3.0,<4.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.include]
-# this tells poetry to include and install periodiq/periodiq.py as django_periodiq.py
-# so it will be installable as `django_periodiq` flat module
-files = [{ path = "periodiq/periodiq.py", dest = "django_periodiq.py" }]
