@@ -6,7 +6,7 @@ import sys
 from copy import deepcopy
 from calendar import monthrange
 from datetime import timedelta
-from pkg_resources import get_distribution
+from importlib.metadata import version
 from queue import Queue
 
 try:
@@ -375,7 +375,7 @@ def monthesrange(start_year, start_month, end_month):
 
 
 def make_argument_parser():
-    dist = get_distribution('periodiq')
+    dist = version('periodiq')
     parser = argparse.ArgumentParser(
         prog="periodiq",
         description="Run periodiq scheduler.",
