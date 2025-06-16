@@ -58,7 +58,15 @@ def reqs(*f):
 
 def install_requires():
     """Get list of requirements required for installation."""
-    return reqs('default.txt')
+    requirements_path = os.path.join(
+        os.path.dirname(__file__), 'requirements', 'default.txt'
+    )
+    with open(requirements_path) as f:
+        return [
+            line.strip()
+            for line in f
+            if line.strip() and not line.strip().startswith("#")
+        ]
 
 # -*- Long Description -*-
 
